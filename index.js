@@ -8,12 +8,28 @@ const ctxFinal = dGame.getContext("2d");
 
 ctx.mageSmoothingEnabled = true;
 ctx.webkitImageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = "high";
 ctxFinal.imageSmoothingEnabled = true;
 ctxFinal.webkitImageSmoothingEnabled = true;
+ctxFinal.imageSmoothingQuality = "high";
 
 const FPS = 60;
 const DPI = window.devicePixelRatio;
 const CANVAS_SCALE = DPI;
+
+function calcAngleDegrees(x, y) {
+    return (Math.atan2(y, x) * 180) / Math.PI;
+}
+
+const mouse = {
+    x: 0,
+    y: 0,
+};
+
+dContainer.addEventListener("mousemove", (e) => {
+    mouse.x = e.clientX * CANVAS_SCALE;
+    mouse.y = e.clientY * CANVAS_SCALE;
+});
 
 class GameObject {
     x = 0;
@@ -36,12 +52,22 @@ class Player extends GameObject {
     attackRadius = 10;
 
     update = () => {
-        // TODO: Rotate towards mouse.
         // TODO: Attack on mouse click.
+        this.angle = calcAngleDegrees(mouse.x - this.x, mouse.y - this.y);
+
+        // TODO: MOVEMENT
     };
 
     draw = () => {
-        drawCircle(this.x, this.y, 20, "#20e715");
+        ctx.save();
+
+        ctx.translate(this.x, this.y);
+        ctx.rotate(((this.angle + 45) * Math.PI) / 180);
+
+        drawCircle(0, 0, 40, "#2015e7");
+        drawSquare(0, 0, 20, "#ffffff");
+
+        ctx.restore();
     };
 }
 
@@ -51,15 +77,17 @@ class Enemy extends GameObject {
     };
 
     draw = () => {
-        drawCircle(this.x, this.y, 10);
+        drawCircle(this.x, this.y, 15, "#e72015");
     };
 }
 
 class FriendlyEnemy extends GameObject {
-    update = () => {};
+    update = () => {
+        // TODO: Move around player, but attack enemies.
+    };
 
     draw = () => {
-        drawCircle(this.x, this.y, 10);
+        drawCircle(this.x, this.y, 15, "#20e715");
     };
 }
 
@@ -74,8 +102,17 @@ function drawCircle(x, y, radius, color) {
     ctx.fillStyle = color ?? lastFillStyle;
 
     ctx.beginPath();
-    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.arc(x, y, radius / 2, 0, 2 * Math.PI);
     ctx.fill();
+
+    ctx.fillStyle = lastFillStyle;
+}
+
+function drawSquare(x, y, size, color) {
+    let lastFillStyle = ctx.fillStyle;
+    ctx.fillStyle = color ?? lastFillStyle;
+
+    ctx.fillRect(x - size / 2, y - size / 2, size, size);
 
     ctx.fillStyle = lastFillStyle;
 }
