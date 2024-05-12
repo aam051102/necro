@@ -5,14 +5,10 @@ body {
 #container {
     position: relative;
     height: 100vh;
+    user-select: none;
 }
 
-#buffer {
-    display: none;
-}
-
-#container #game,
-#container #buffer {
+#container #game {
     position: absolute;
     height: 100%;
     width: 100%;

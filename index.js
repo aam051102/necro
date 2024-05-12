@@ -1,17 +1,12 @@
 const dContainer = document.querySelector("#container");
 const dGame = document.querySelector("#game");
-const dBuffer = document.querySelector("#buffer");
-const ctx = dBuffer.getContext("2d", {
+const ctx = dGame.getContext("2d", {
     willReadFrequently: true,
 });
-const ctxFinal = dGame.getContext("2d");
 
 ctx.mageSmoothingEnabled = true;
 ctx.webkitImageSmoothingEnabled = true;
 ctx.imageSmoothingQuality = "high";
-ctxFinal.imageSmoothingEnabled = true;
-ctxFinal.webkitImageSmoothingEnabled = true;
-ctxFinal.imageSmoothingQuality = "high";
 
 const FPS = 60;
 const DPI = window.devicePixelRatio;
@@ -24,11 +19,48 @@ function calcAngleDegrees(x, y) {
 const mouse = {
     x: 0,
     y: 0,
+    lmb: false,
+    rmb: false,
 };
+
+const keyInput = {};
 
 dContainer.addEventListener("mousemove", (e) => {
     mouse.x = e.clientX * CANVAS_SCALE;
     mouse.y = e.clientY * CANVAS_SCALE;
+});
+
+document.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+});
+
+document.addEventListener("mousedown", (e) => {
+    if (e.button === 0) {
+        lmb = true;
+    }
+
+    if (e.button === 2) {
+        rmb = true;
+    }
+});
+
+document.addEventListener("mouseup", (e) => {
+    if (e.button === 0) {
+        lmb = false;
+    }
+
+    if (e.button === 2) {
+        rmb = false;
+    }
+});
+
+document.addEventListener("keydown", (e) => {
+    keyInput[e.key] = true;
+});
+
+document.addEventListener("keyup", (e) => {
+    keyInput[e.key] = false;
 });
 
 class GameObject {
@@ -45,6 +77,7 @@ class GameObject {
 class Player extends GameObject {
     x = 50;
     y = 60;
+    movementSpeed = 3;
     angle = 0;
     isAttacking = false;
     attackCooldown = 0;
@@ -53,9 +86,22 @@ class Player extends GameObject {
 
     update = () => {
         // TODO: Attack on mouse click.
+
+        // Rotate to look at mouse
         this.angle = calcAngleDegrees(mouse.x - this.x, mouse.y - this.y);
 
-        // TODO: MOVEMENT
+        // Move
+        if (keyInput["w"]) {
+            this.y -= this.movementSpeed;
+        } else if (keyInput["s"]) {
+            this.y += this.movementSpeed;
+        }
+
+        if (keyInput["a"]) {
+            this.x -= this.movementSpeed;
+        } else if (keyInput["d"]) {
+            this.x += this.movementSpeed;
+        }
     };
 
     draw = () => {
@@ -121,9 +167,6 @@ function drawSquare(x, y, size, color) {
 function resizeGame() {
     dGame.setAttribute("width", dContainer.clientWidth * CANVAS_SCALE);
     dGame.setAttribute("height", dContainer.clientHeight * CANVAS_SCALE);
-
-    dBuffer.setAttribute("width", dContainer.clientWidth * CANVAS_SCALE);
-    dBuffer.setAttribute("height", dContainer.clientHeight * CANVAS_SCALE);
 }
 
 window.addEventListener("resize", () => {
@@ -144,18 +187,11 @@ setInterval(loop, 1000 / FPS);
 // Render
 function render() {
     // Clear
-    ctx.clearRect(0, 0, dBuffer.width, dBuffer.height);
+    ctx.clearRect(0, 0, dGame.width, dGame.height);
 
     for (const gameObject of gameObjects) {
         gameObject.draw();
     }
-
-    // Swap buffers
-    ctxFinal.putImageData(
-        ctx.getImageData(0, 0, dBuffer.width, dBuffer.height),
-        0,
-        0
-    );
 
     window.requestAnimationFrame(render);
 }
