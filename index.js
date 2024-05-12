@@ -30,28 +30,28 @@ dContainer.addEventListener("mousemove", (e) => {
     mouse.y = e.clientY * CANVAS_SCALE;
 });
 
-document.addEventListener("contextmenu", (e) => {
+dContainer.addEventListener("contextmenu", (e) => {
     e.preventDefault();
     e.stopPropagation();
 });
 
-document.addEventListener("mousedown", (e) => {
+dContainer.addEventListener("mousedown", (e) => {
     if (e.button === 0) {
-        lmb = true;
+        mouse.lmb = true;
     }
 
     if (e.button === 2) {
-        rmb = true;
+        mouse.rmb = true;
     }
 });
 
-document.addEventListener("mouseup", (e) => {
+dContainer.addEventListener("mouseup", (e) => {
     if (e.button === 0) {
-        lmb = false;
+        mouse.lmb = false;
     }
 
     if (e.button === 2) {
-        rmb = false;
+        mouse.rmb = false;
     }
 });
 
@@ -77,15 +77,27 @@ class GameObject {
 class Player extends GameObject {
     x = 50;
     y = 60;
-    movementSpeed = 3;
+    movementSpeed = 4;
     angle = 0;
-    isAttacking = false;
     attackCooldown = 0;
-    attackCooldownDefault = 8;
-    attackRadius = 10;
+    attackCooldownDefault = 30;
+    attackRadius = 120;
+    attackAnimPos = 0;
 
     update = () => {
-        // TODO: Attack on mouse click.
+        // Attack
+        if (this.attackCooldown > 0) {
+            this.attackCooldown--;
+        }
+
+        if (mouse.lmb && this.attackCooldown === 0) {
+            // TODO: Attack on mouse click.
+            this.attackCooldown = this.attackCooldownDefault;
+        }
+
+        // TODO: Summon
+        if (mouse.rmb) {
+        }
 
         // Rotate to look at mouse
         this.angle = calcAngleDegrees(mouse.x - this.x, mouse.y - this.y);
@@ -105,10 +117,23 @@ class Player extends GameObject {
     };
 
     draw = () => {
+        // Calculate attack animation position
+        if (this.attackCooldown !== 0) {
+            this.attackAnimPos =
+                (this.attackRadius / this.attackCooldownDefault) *
+                this.attackCooldown;
+        } else {
+            this.attackAnimPos = 0;
+        }
+
+        // Render
         ctx.save();
 
         ctx.translate(this.x, this.y);
         ctx.rotate(((this.angle + 45) * Math.PI) / 180);
+
+        drawCircle(0, 0, this.attackRadius, "#fcdcec");
+        drawCircle(0, 0, this.attackAnimPos, "#f53b98");
 
         drawCircle(0, 0, 40, "#2015e7");
         drawSquare(0, 0, 20, "#ffffff");
