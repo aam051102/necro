@@ -1,0 +1,19 @@
+body {
+    margin: 0;
+}
+
+#container {
+    position: relative;
+    height: 100vh;
+}
+
+#buffer {
+    display: none;
+}
+
+#container #game,
+#container #buffer {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+}
