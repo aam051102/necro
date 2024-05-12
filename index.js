@@ -35,6 +35,10 @@ dContainer.addEventListener("contextmenu", (e) => {
     e.stopPropagation();
 });
 
+dContainer.addEventListener("wheel", (e) => {
+    // TODO: Register scroll, and upon scroll, toggle between player attack and summon methods.
+});
+
 dContainer.addEventListener("mousedown", (e) => {
     if (e.button === 0) {
         mouse.lmb = true;
@@ -79,10 +83,24 @@ class Player extends GameObject {
     y = 60;
     movementSpeed = 4;
     angle = 0;
+
+    /**
+     * Can be 0 for attack or 1 for summon
+     */
+    usageType = 0;
+
+    // Attack
+    attackPos = { x: 0, y: 0 };
     attackCooldown = 0;
     attackCooldownDefault = 30;
     attackRadius = 120;
-    attackAnimPos = 0;
+    attackAnimRadius = 0;
+
+    // Summon
+    summonPos = { x: 0, y: 0 };
+    summonCooldown = 0;
+    summonCooldownDefault = 60;
+    summonRadius = 90;
 
     update = () => {
         // Attack
@@ -93,6 +111,8 @@ class Player extends GameObject {
         if (mouse.lmb && this.attackCooldown === 0) {
             // TODO: Attack on mouse click.
             this.attackCooldown = this.attackCooldownDefault;
+            this.attackPos.x = mouse.x;
+            this.attackPos.y = mouse.y;
         }
 
         // TODO: Summon
@@ -117,23 +137,38 @@ class Player extends GameObject {
     };
 
     draw = () => {
+        // Render or summon
+        if (this.usageType === 0) {
+            drawCircle(mouse.x, mouse.y, this.attackRadius, "#ffe0f0");
+        }
+
+        if (this.usageType === 1) {
+            drawCircle(mouse.x, mouse.y, this.summonRadius, "#dfffdb");
+        }
+
         // Calculate attack animation position
         if (this.attackCooldown !== 0) {
-            this.attackAnimPos =
+            this.attackAnimRadius =
                 (this.attackRadius / this.attackCooldownDefault) *
                 this.attackCooldown;
         } else {
-            this.attackAnimPos = 0;
+            this.attackAnimRadius = 0;
         }
 
-        // Render
+        if (this.attackCooldown !== 0) {
+            drawCircle(
+                this.attackPos.x,
+                this.attackPos.y,
+                this.attackAnimRadius,
+                "#f53b98"
+            );
+        }
+
+        // Render player
         ctx.save();
 
         ctx.translate(this.x, this.y);
         ctx.rotate(((this.angle + 45) * Math.PI) / 180);
-
-        drawCircle(0, 0, this.attackRadius, "#fcdcec");
-        drawCircle(0, 0, this.attackAnimPos, "#f53b98");
 
         drawCircle(0, 0, 40, "#2015e7");
         drawSquare(0, 0, 20, "#ffffff");
@@ -143,12 +178,49 @@ class Player extends GameObject {
 }
 
 class Enemy extends GameObject {
+    constructor(x, y) {
+        super();
+        this.x = x;
+        this.y = y;
+    }
+
     update = () => {
         // TODO: Move towards player
+        // TODO: When attacked and killed, replace with DeadEnemy
     };
 
     draw = () => {
         drawCircle(this.x, this.y, 15, "#e72015");
+    };
+}
+
+class DeadEnemy extends GameObject {
+    decay = 0;
+    maxDecay = 60;
+
+    constructor(x, y) {
+        super();
+        this.x = x;
+        this.y = y;
+    }
+
+    update = () => {
+        this.decay++;
+
+        if (this.decay >= this.maxDecay) {
+            // TODO: Destroy dead enemy
+        }
+
+        // TODO: When within active summon area, replace with FriendlyEnemy
+    };
+
+    draw = () => {
+        drawSquare(
+            this.x,
+            this.y,
+            15 - (15 / this.maxDecay) * dthis.ecay,
+            "#e72015"
+        );
     };
 }
 
@@ -166,6 +238,10 @@ const gameObjects = [];
 
 // Setup game room
 gameObjects.push(new Player());
+
+gameObjects.push(new Enemy(50, 30));
+gameObjects.push(new Enemy(30, 90));
+gameObjects.push(new Enemy(120, 30));
 
 // Render utilities
 function drawCircle(x, y, radius, color) {
